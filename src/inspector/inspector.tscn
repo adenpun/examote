@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3 uid="uid://cmc186unn1bqy"]
+
+[ext_resource type="Script" path="res://src/inspector/inspector.gd" id="1_ug58k"]
+
+[node name="Inspector" type="Control" node_paths=PackedStringArray("tree")]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_ug58k")
+tree = NodePath("HBoxContainer/Tree")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Tree" type="Tree" parent="HBoxContainer"]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+hide_root = true
+drop_mode_flags = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "asdasdasd"

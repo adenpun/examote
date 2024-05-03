@@ -1,0 +1,8 @@
+res://src/EM_nodes/EM_container/EM_container.gd
+res://src/main.tscn
+res://src/EM_nodes/EM_text/EM_text.tscn
+res://src/main.gd
+res://src/EM_nodes/EM_container/EM_container.tscn
+res://src/EM_nodes/a.gd
+res://src/EM_nodes/EM_text/EM_text.gd
+res://src/EM_nodes/EM_node.gd
