@@ -1,13 +1,14 @@
 import * as PIXI from 'pixi.js';
-import type { Canvas } from './canvas';
+import type { AppCanvas } from './canvas.svelte';
+import { Text } from './text.svelte';
 
 interface ViewportOptions {
-	canvas: Canvas;
+	appCanvas: AppCanvas;
 }
 
 export class Viewport extends PIXI.Container {
 	private vp_scale: number = 1;
-	private canvas: Canvas;
+	private appCanvas: AppCanvas;
 
 	public constructor(options: ViewportOptions) {
 		super({
@@ -15,7 +16,7 @@ export class Viewport extends PIXI.Container {
 			width: window.innerWidth
 		});
 
-		this.canvas = options.canvas;
+		this.appCanvas = options.appCanvas;
 
 		this.addListeners();
 		this.eventMode = 'static';
@@ -24,7 +25,7 @@ export class Viewport extends PIXI.Container {
 	public setScale(scale: number) {
 		this.vp_scale = scale;
 		for (const child of this.children) {
-			if (child instanceof PIXI.Text) {
+			if (child instanceof Text) {
 				child.style.fontSize = 100 * this.vp_scale;
 			}
 		}
@@ -32,20 +33,19 @@ export class Viewport extends PIXI.Container {
 
 	private addListeners() {
 		let isPointerDown = false;
-		this.canvas.app?.canvas.addEventListener('wheel', (e) => {
-			if (e.deltaY < 0) {
-				this.setScale(this.vp_scale * 1.1);
-			} else {
-				this.setScale(this.vp_scale / 1.1);
-			}
+		this.appCanvas.app?.canvas.addEventListener('wheel', (e) => {
+			const scale = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+			this.setScale(this.vp_scale * scale);
+			this.position.x = e.clientX - (e.clientX - this.position.x) * scale;
+			this.position.y = e.clientY - (e.clientY - this.position.y) * scale;
 		});
-		this.canvas.app?.canvas.addEventListener('pointerup', () => {
+		this.appCanvas.app?.canvas.addEventListener('pointerup', () => {
 			isPointerDown = false;
 		});
-		this.canvas.app?.canvas.addEventListener('pointerdown', () => {
+		this.appCanvas.app?.canvas.addEventListener('pointerdown', () => {
 			isPointerDown = true;
 		});
-		this.canvas.app?.canvas.addEventListener('pointermove', (e) => {
+		this.appCanvas.app?.canvas.addEventListener('pointermove', (e) => {
 			if (!isPointerDown) return;
 			this.position.x += e.movementX;
 			this.position.y += e.movementY;
