@@ -1,0 +1,13 @@
+---
+interface Props {
+  key: string;
+  value: string;
+  example?: string;
+}
+
+const { key, value, example } = Astro.props;
+---
+
+<h3>{key}</h3>
+{example && <blockquote>{example}</blockquote>}
+<p>{value}</p>
