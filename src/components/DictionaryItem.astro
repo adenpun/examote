@@ -1,13 +1,21 @@
 ---
 interface Props {
   key: string;
-  value: string;
-  example?: string;
+  values: {
+    value: string;
+    example?: string;
+  }[];
 }
 
-const { key, value, example } = Astro.props;
+const { key, values } = Astro.props;
 ---
 
 <h3>{key}</h3>
-{example && <blockquote>{example}</blockquote>}
-<p>{value}</p>
+{
+  values.map(({ value, example }) => (
+    <>
+      {example && <blockquote>{example}</blockquote>}
+      <p>{value}</p>
+    </>
+  ))
+}

@@ -76,6 +76,10 @@ if (isEdit && Astro.request.method === "POST") {
 
 <script>
   import * as monaco from "monaco-editor";
+  import * as prettier from "prettier/standalone";
+  import markdown from "prettier/plugins/markdown";
+  import html from "prettier/plugins/html";
+  import yaml from "prettier/plugins/yaml";
 
   const isEdit = new URL(location.href).searchParams.get("edit") !== null;
   if (isEdit) {
@@ -94,6 +98,15 @@ if (isEdit && Astro.request.method === "POST") {
       editor.addCommand(
         monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
         async () => {
+          const formatted = await prettier.format(editor.getValue(), {
+            parser: "markdown",
+            plugins: [markdown, html, yaml],
+          });
+          const position = editor.getPosition();
+          editor.executeEdits("formatting", [
+            { range: editor.getModel()?.getFullModelRange()!, text: formatted },
+          ]);
+          if (position) editor.setPosition(position);
           await fetch("?edit", {
             method: "POST",
             body: editor.getValue(),

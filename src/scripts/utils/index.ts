@@ -45,6 +45,42 @@ const markdownItPlugin: PluginSimple = (md) => {
 
     return true;
   });
+
+  md.inline.ruler.push("em-meaning", (state, _silent) => {
+    if (state.src[state.pos] !== "{") return false;
+    const startToken = state.push("em-meaning-start", "span", 1);
+    state.pos++;
+
+    // text
+    const textToken = state.push("text", "", 0);
+    while (state.pos < state.src.length && state.src[state.pos] !== ":") {
+      textToken.content += state.src[state.pos];
+      state.pos++;
+    }
+
+    textToken.content = textToken.content.trim();
+
+    // `:`
+    if (state.src[state.pos] !== ":") return false;
+    state.pos++;
+
+    let meaning = "";
+    // text
+    while (state.pos < state.src.length && state.src[state.pos] !== "}") {
+      meaning += state.src[state.pos];
+      state.pos++;
+    }
+
+    // `}`
+    if (state.src[state.pos] !== "}") return false;
+    state.push("em-meaning-end", "span", -1);
+    state.pos++;
+
+    startToken.attrSet("title", meaning);
+    textToken.content = textToken.content.trim();
+
+    return true;
+  });
 };
 
 const mdEnvSchema = z.object({
