@@ -1,17 +1,17 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import { mongoDB } from "@scripts/db";
-import { itemToHtml } from "@scripts/utils";
 
 const item = await mongoDB.getItem(Astro.params.slug!);
 
-let { html, env } = item ? await itemToHtml(item) : {};
+// let { html, env } = item ? await itemToHtml(item) : {};
 
-const title = env
-  ? env.frontmatter?.title
-    ? env.frontmatter.title
-    : "Title Not Found"
-  : "Not Found";
+// const title = env
+//   ? env.frontmatter?.title
+//     ? env.frontmatter.title
+//     : "Title Not Found"
+//   : "Not Found";
+const title = "asd";
 const isEdit = Astro.url.searchParams.get("edit") !== null;
 const isSource = Astro.url.searchParams.get("source") !== null;
 
@@ -38,81 +38,75 @@ if (isEdit && Astro.request.method === "POST") {
 ---
 
 <Layout title={title}>
-  {
-    !isEdit && (
-      <>
-        <>
-          <h1 class="inline p-2">{title}</h1>
-          <a href="?edit" class="print:hidden">
-            Edit
-          </a>
-        </>
-        <hr />
-        {item && (
-          <article
-            set:html={html}
-            class="prose p-2 print:prose-a:font-normal print:prose-a:text-inherit print:prose-a:no-underline"
-          />
-        )}
-        {!item && (
-          <p class="p-2">
-            Item not found!{" "}
-            <a href={`?edit`}>
-              Click here to create a new item with the id: {Astro.params.slug}
-            </a>
-          </p>
-        )}
-      </>
-    )
-  }
-  {
-    isEdit && (
-      <div id="edit-container" class="h-full">
-        <pre>{item?.content}</pre>
-      </div>
-    )
-  }
+  <div id="editor"></div>
 </Layout>
 
 <script>
-  import * as monaco from "monaco-editor";
-  import * as prettier from "prettier/standalone";
-  import markdown from "prettier/plugins/markdown";
-  import html from "prettier/plugins/html";
-  import yaml from "prettier/plugins/yaml";
+  import { markdown } from "@codemirror/lang-markdown";
+  import { syntaxTree } from "@codemirror/language";
+  import { EditorState, RangeSet, RangeSetBuilder } from "@codemirror/state";
+  import {
+    Decoration,
+    EditorView,
+    ViewPlugin,
+    ViewUpdate,
+    WidgetType,
+    type DecorationSet,
+  } from "@codemirror/view";
+  import { minimalSetup } from "codemirror";
 
-  const isEdit = new URL(location.href).searchParams.get("edit") !== null;
-  if (isEdit) {
-    const container = document.getElementById("edit-container");
-    if (container) {
-      const sourceElement = container.getElementsByTagName("pre")[0];
-      const source = sourceElement.textContent ?? "";
-      sourceElement.remove();
+  class HeaderWidget extends WidgetType {
+    constructor() {
+      super();
+    }
 
-      const editor = monaco.editor.create(container, {
-        value: source,
-        language: "markdown",
-        automaticLayout: true,
-      });
-
-      editor.addCommand(
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
-        async () => {
-          const formatted = await prettier.format(editor.getValue(), {
-            parser: "markdown",
-            plugins: [markdown, html, yaml],
-          });
-          const position = editor.getPosition();
-          editor.executeEdits("formatting", [
-            { range: editor.getModel()?.getFullModelRange()!, text: formatted },
-          ]);
-          if (position) editor.setPosition(position);
-          await fetch("?edit", {
-            method: "POST",
-            body: editor.getValue(),
-          });
-        },
-      );
+    toDOM(view: EditorView): HTMLElement {
+      const h1 = document.createElement("h1");
+      h1.textContent = "asd";
+      return h1;
     }
   }
+  function header(view: EditorView): RangeSet<Decoration> {
+    const builder = new RangeSetBuilder<Decoration>();
+    syntaxTree(view.state).iterate({
+      enter: (node) => {
+        if (node.name !== "ATXHeading1") return;
+        builder.add(
+          node.from,
+          node.to,
+          Decoration.replace({
+            widget: new HeaderWidget(),
+          }),
+        );
+      },
+    });
+    return builder.finish();
+  }
+
+  const emMarkdown = ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+
+      constructor(view: EditorView) {
+        this.decorations = header(view);
+      }
+
+      update(update: ViewUpdate) {
+        if (update.docChanged) {
+          this.decorations = header(update.view);
+          console.log(this.decorations);
+        }
+      }
+    },
+  );
+
+  const state = EditorState.create({
+    doc: "hello world",
+    extensions: [minimalSetup, markdown(), emMarkdown],
+  });
+
+  new EditorView({
+    state: state,
+    parent: document.getElementById("editor")!,
+  });
 </script>

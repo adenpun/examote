@@ -1,9 +1,18 @@
 import { JSONAdapter } from "./adapters/json";
 import { MongoDBAdapter } from "./adapters/mongodb";
-import { bcryptCompare, bcryptHash } from "./utils.server";
 
-export const mongoDB: MongoDBAdapter = new MongoDBAdapter(
-  import.meta.env.MONGODB_URL,
-);
+export const mongoDB: JSONAdapter = new JSONAdapter();
 
-await mongoDB.connect();
+mongoDB.addItem({
+  id: "asd",
+  content: `
+# asd
+
+[[asd: aasdsd]]`,
+});
+
+// export const mongoDB: MongoDBAdapter = new MongoDBAdapter(
+//   import.meta.env.MONGODB_URL,
+// );
+
+// await mongoDB.connect();
